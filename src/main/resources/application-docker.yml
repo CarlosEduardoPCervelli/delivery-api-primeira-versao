@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://db:5432/delivery_db
+    username: delivery_user
+    password: delivery_pass
