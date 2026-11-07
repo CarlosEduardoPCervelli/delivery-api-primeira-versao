@@ -46,9 +46,11 @@ public class PedidoController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Busca um pedido pelo id")
-    public ResponseEntity<PedidoResponse> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(pedidoService.buscarPorId(id));
+    @Operation(summary = "Busca um pedido pelo id (somente cliente, restaurante ou entregador do pedido)")
+    public ResponseEntity<PedidoResponse> buscarPorId(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(pedidoService.buscarPorId(userDetails.getUsername(), id));
     }
 
     @GetMapping("/restaurante/me")
@@ -69,5 +71,39 @@ public class PedidoController {
             @PathVariable Long id,
             @Valid @RequestBody AtualizaStatusRequest request) {
         return ResponseEntity.ok(pedidoService.atualizarStatus(userDetails.getUsername(), id, request.status()));
+    }
+
+    @GetMapping("/entregas/disponiveis")
+    @PreAuthorize("hasRole('ENTREGADOR')")
+    @Operation(summary = "Lista pedidos em preparo que ainda não têm entregador")
+    public ResponseEntity<Page<PedidoResponse>> entregasDisponiveis(Pageable pageable) {
+        return ResponseEntity.ok(pedidoService.listarDisponiveisParaEntrega(pageable));
+    }
+
+    @GetMapping("/entregas/me")
+    @PreAuthorize("hasRole('ENTREGADOR')")
+    @Operation(summary = "Lista as entregas do entregador logado")
+    public ResponseEntity<Page<PedidoResponse>> minhasEntregas(
+            @AuthenticationPrincipal UserDetails userDetails,
+            Pageable pageable) {
+        return ResponseEntity.ok(pedidoService.listarPorEntregador(userDetails.getUsername(), pageable));
+    }
+
+    @PatchMapping("/{id}/aceitar-entrega")
+    @PreAuthorize("hasRole('ENTREGADOR')")
+    @Operation(summary = "O entregador aceita um pedido em preparo (uma entrega por vez)")
+    public ResponseEntity<PedidoResponse> aceitarEntrega(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(pedidoService.aceitarEntrega(userDetails.getUsername(), id));
+    }
+
+    @PatchMapping("/{id}/confirmar-entrega")
+    @PreAuthorize("hasRole('ENTREGADOR')")
+    @Operation(summary = "O entregador responsável confirma que o pedido foi entregue")
+    public ResponseEntity<PedidoResponse> confirmarEntrega(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(pedidoService.confirmarEntrega(userDetails.getUsername(), id));
     }
 }
