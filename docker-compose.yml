@@ -24,7 +24,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      JWT_SECRET: troque-este-segredo-em-producao-para-uma-chave-bem-mais-longa-e-aleatoria
+      JWT_SECRET: ${JWT_SECRET:-troque-este-segredo-em-producao-para-uma-chave-bem-mais-longa-e-aleatoria}
     ports:
       - "8080:8080"
 
