@@ -1,4 +1,5 @@
 # 🛵 Delivery API
+![CI](https://github.com/CarlosEduardoPCervelli/delivery-api/actions/workflows/ci.yml/badge.svg)
 
 API REST para um sistema de delivery, com cadastro de clientes, restaurantes, produtos e gerenciamento completo do ciclo de vida de um pedido — do recebimento até a entrega.
 
