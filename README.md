@@ -18,7 +18,8 @@ Projeto desenvolvido para fins de portfólio, aplicando arquitetura em camadas, 
   CANCELADO   CANCELADO
   ```
 
-- **Regras de negócio no domínio**: pedido só pode ser criado se o restaurante estiver aberto; produto só pode ser vendido se estiver disponível e pertencer ao restaurante do pedido; transições de status inválidas são bloqueadas
+- **Fluxo do entregador**: o entregador vê os pedidos em preparo que ainda não têm entregador, aceita um deles (uma entrega por vez) e confirma a entrega no final. O restaurante só consegue despachar o pedido (`SAIU_PARA_ENTREGA`) depois que um entregador o aceitou, e a entrega (`ENTREGUE`) é confirmada pelo entregador responsável
+- **Regras de negócio no domínio**: pedido só pode ser criado se o restaurante estiver aberto; produto só pode ser vendido se estiver disponível e pertencer ao restaurante do pedido; transições de status inválidas são bloqueadas; um pedido só pode ser consultado por quem participa dele (cliente, restaurante ou entregador)
 - **Paginação e filtros** nas listagens (restaurantes por categoria/nome, pedidos por status)
 - **Tratamento global de exceções**, com respostas de erro padronizadas
 - **Documentação interativa** via Swagger/OpenAPI
@@ -98,7 +99,11 @@ http://localhost:8080/docs
 3. **Login**: `POST /auth/login` → retorna o token JWT
 4. **Restaurante cadastra produtos**: `POST /restaurantes/me/produtos` (com o token do restaurante)
 5. **Cliente cria um pedido**: `POST /pedidos` (com o token do cliente)
-6. **Restaurante avança o status do pedido**: `PATCH /pedidos/{id}/status`
+6. **Restaurante avança o status do pedido** (`RECEBIDO` → `EM_PREPARO`): `PATCH /pedidos/{id}/status`
+7. **Cadastrar um entregador**: `POST /auth/register` com `perfil: ENTREGADOR` e `veiculo`
+8. **Entregador lista e aceita um pedido em preparo**: `GET /pedidos/entregas/disponiveis` e `PATCH /pedidos/{id}/aceitar-entrega`
+9. **Restaurante despacha o pedido** (`SAIU_PARA_ENTREGA`): `PATCH /pedidos/{id}/status`
+10. **Entregador confirma a entrega**: `PATCH /pedidos/{id}/confirmar-entrega`
 
 Todas as rotas protegidas esperam o header:
 ```
@@ -120,11 +125,16 @@ Authorization: Bearer <token>
 | POST | `/pedidos` | Cria um pedido | CLIENTE |
 | GET | `/pedidos/me` | Lista pedidos do cliente logado | CLIENTE |
 | GET | `/pedidos/restaurante/me` | Lista pedidos recebidos (filtro: `status`) | RESTAURANTE |
-| PATCH | `/pedidos/{id}/status` | Atualiza status do pedido | RESTAURANTE |
+| GET | `/pedidos/{id}` | Detalhes de um pedido | CLIENTE, RESTAURANTE ou ENTREGADOR do pedido |
+| PATCH | `/pedidos/{id}/status` | Atualiza status do pedido (a confirmação de `ENTREGUE` é do entregador) | RESTAURANTE |
+| GET | `/pedidos/entregas/disponiveis` | Lista pedidos em preparo sem entregador | ENTREGADOR |
+| GET | `/pedidos/entregas/me` | Lista as entregas do entregador logado | ENTREGADOR |
+| PATCH | `/pedidos/{id}/aceitar-entrega` | Aceita um pedido em preparo | ENTREGADOR |
+| PATCH | `/pedidos/{id}/confirmar-entrega` | Confirma a entrega do pedido | ENTREGADOR (responsável) |
 
 ## 🗺️ Possíveis evoluções
 
-- Fluxo completo de atribuição e acompanhamento de entregador
+- Localização e acompanhamento em tempo real do entregador
 - Avaliações de restaurante e produto
 - Notificações em tempo real (WebSocket) sobre mudança de status
 - Testes de integração com Testcontainers
