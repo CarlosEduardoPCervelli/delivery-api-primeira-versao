@@ -39,3 +39,9 @@ logging:
   level:
     com.delivery.api: INFO
     org.springframework.security: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
